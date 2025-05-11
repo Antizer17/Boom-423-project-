@@ -23,6 +23,11 @@ crates = [
     (-863.312606397818, 1200.4214978749658, 70)
 ]
 
+health_packs=[    (-663.312606397818, 1200.4214978749658, 70,25),
+    (-1360.821003117057, 568.3919648628456, 70,25),
+    (-863.312606397818, 1200.4214978749658, 70,25)]
+
+keys=[(-1360, 768.3919648628456, 70)]
 
 scaling_factor=1
 gun_rotation=0
@@ -66,6 +71,7 @@ enemy_scale_direction = 1
 enemy_speed = 2
 
 player_health = 5
+player_key=0
 score = 0
 player_dead = False
 missed_bullets = 0
@@ -145,16 +151,16 @@ def spawn_enemies():
     global enemies
     enemies = []
     for i in range(5):
-        x = random.randint(-GRID_LENGTH + 50, GRID_LENGTH - 50)
-        y = random.randint(-GRID_LENGTH + 50, GRID_LENGTH - 50)
+        x = random.randint(-GRID_LENGTH - 1000, GRID_LENGTH + 1000)
+        y = random.randint(-GRID_LENGTH - 1000, GRID_LENGTH + 1000)
         enemies.append((x, y))
     x = -1465.2414404826753
     y = 774.4560684762663
     for drones in range(10):
 
+        x = random.randint(-1500, -600)
+        y = random.randint( 600, 1200)
         enemies.append((x, y))
-        x+=80
-        y+=70
 
 
 def move_enemies_towards_player():
@@ -374,14 +380,14 @@ def update_bullets():
             drum_x = drum_pos[0]
             drum_y = drum_pos[1]
             if math.hypot(x - drum_x, y - drum_y) < 50:
-                dx = 1500
-                dy = 1500
+                dx = 5000
+                dy = 5000
                 explosive_drums[i]=(dx,dy)
                 hit_enemy = True
                 print("drum hit!")
                 for e in range(len(enemies)):
-                    ex = random.randint(-GRID_LENGTH + 50, GRID_LENGTH - 50)
-                    ey = random.randint(-GRID_LENGTH + 50, GRID_LENGTH - 50)
+                    ex = random.randint(-GRID_LENGTH - 1000, GRID_LENGTH + 1000)
+                    ey = random.randint(-GRID_LENGTH - 1000, GRID_LENGTH + 1000)
                     enemies[e]=(ex,ey)
                     score+=1
                 orange_screen_flag=True
@@ -399,10 +405,42 @@ def update_bullets():
                 hit_enemy = True
                 print("crate hit!",crates[p])
                 
+                
             p = p + 1
     bullets = keep_list
    
-        
+def draw_sphere(x, y, z, radius,color):
+    """
+    Draws a green sphere at the given position (x, y, z) with a specified radius.
+
+    :param x: X-coordinate for the center of the sphere
+    :param y: Y-coordinate for the center of the sphere
+    :param z: Z-coordinate for the center of the sphere
+    :param radius: Radius of the sphere
+    """
+    if color=="green":
+        glPushMatrix()
+        glTranslatef(x, y, z)  # Position the sphere at (x, y, z)
+    
+        glColor3f(0.0, 1.0, 0.0)  # Set the color to green
+
+    # Draw the sphere using gluSphere (with the specified radius)
+        gluSphere(gluNewQuadric(), radius, 20, 20)
+
+        glPopMatrix()
+
+    elif color=="gold":
+        glPushMatrix()
+        glTranslatef(x, y, z)  # Position the sphere at (x, y, z)
+    
+        glColor3f(1.0, 0.84, 0.0)  # Set the color to green
+
+    # Draw the sphere using gluSphere (with the specified radius)
+        gluSphere(gluNewQuadric(), radius, 20, 20)
+
+        glPopMatrix()
+
+
 
 def draw_room(x, y, width, depth, height, door_width=100, door_height=150):
     """Draws a large open-top room (4 walls, no ceiling or floor) with an open door on the front wall, and a floor."""
@@ -511,7 +549,7 @@ def draw_room(x, y, width, depth, height, door_width=100, door_height=150):
 
 def draw_crate(x, y, z=0):
     """Draws a simple crate at position (x, y, z)."""
-    crate_size = 70  # Size of the crate
+    crate_size = 100  # Size of the crate
 
     # Crate color (brownish color)
     glColor3f(199/255,157/255,122/255)
@@ -560,6 +598,7 @@ def draw_crate(x, y, z=0):
 
     glEnd()
     glPopMatrix()
+
 def draw_explosive_drum(x, y, z=0):
     """Draws an explosive drum (barrel) at position (x, y, z)."""
     radius = 30  # Radius of the drum
@@ -594,7 +633,6 @@ def draw_explosive_drum(x, y, z=0):
 
 
 
-
 def draw_walls():
     wall_height = 50
 
@@ -619,6 +657,7 @@ def draw_walls():
     # === Create Open Doors on the Rooms ===
     # Room 1 (Open door on the front wall)
     # Change color to create door-like appearance
+ 
     glBegin(GL_QUADS)
     # Open door on the front wall
     glVertex3f(-800, 400, 50)  # Bottom-left
@@ -892,21 +931,33 @@ def mouseListener(button, state, x, y):
         glutPostRedisplay()
 
 def showScreen():
-    global score, player_health,explosive_drums,orange_screen_flag
+    global score, player_health,explosive_drums,orange_screen_flag,health_packs
+    rotation_angle=0
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
     glViewport(0, 0, 1000, 800)
     setupCamera()
     draw_bullets()
     # Draw an enemy at position (50, 100, 0) with body size 4, head size 1.5, and limb size 1
-   
+    
+        # Rotate the pill slowly in a clockwise direction around the y-axis
+    glPushMatrix()
+    glRotatef(rotation_angle, 0.0, 1.0, 0.0)  # Rotate around the y-axis
+    
+    glPopMatrix()
+
+    # Update the rotation angle for the next frame (slow clockwise rotation)
+    rotation_angle += 0.1  # Slow rotation speed
+    if rotation_angle > 360:
+        rotation_angle -= 360 
     glPushMatrix()
     glTranslatef(player_pos[0], player_pos[1], 1)
     glRotatef(player_angle, 0, 0, 1)
     draw_player()
+
     glPopMatrix()
     #draw_enemy_2(0,0,50,25)
-   
+  
     draw_walls()
     for x in explosive_drums:
         drum_pos_x=x[0]
@@ -917,8 +968,38 @@ def showScreen():
     for c in crates:
         c_pos_x=c[0]
         c_pos_y=c[1]
-        c_pos_z=70
+        c_pos_z=50
         draw_crate(c_pos_x, c_pos_y, c_pos_z)
+    
+    
+    for g in range(len(health_packs)-1):
+        
+        
+        if abs(player_pos[0]-health_packs[g][0])<15 and abs(player_pos[1]-health_packs[g][1])<15:
+            player_health+=2
+            del health_packs[g]
+
+        else:
+            draw_sphere (health_packs[g][0], health_packs[g][1], 70,15,"green")
+    
+    for key in range(len(keys)):
+        
+        
+        if abs(player_pos[0]-keys[key][0])<15 and abs(player_pos[1]-keys[key][1])<15:
+            player_key+=1
+            del keys[key]
+
+        else:
+            draw_sphere (keys[key][0], keys[key][1], 70,8,"gold")
+
+
+
+
+    
+
+  
+    
+
 
     
 
