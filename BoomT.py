@@ -11,34 +11,50 @@ key_states = {b'w': False, b'a': False, b's': False, b'd': False}
 
 room4_x, room4_y, room4_width, room4_depth = -1800, 2500, 1500, 1500
 orange_screen_flag = False
-explosive_drums = [(-1100, 50), (-1400, -400), (100, 100)]
+explosive_drums = [(-1100, 50), (-1400, -400), (100, 100),(-2064.7779086129917,
+1942.35205192705),(-767.8478392443643,
+2771.1602691850376)]
 crates = [
     (-700, -800, 70),
     (-700, -1000, 70),
     (-700, -600, 70),
     (-700, -400, 70),
-    (800, -1100, 70),
+   
     (-1360.821003117057, 968.3919648628456, 70),
     (-1360, 768.3919648628456, 70),
     (-1360.821003117057, 568.3919648628456, 70),
     (-663.312606397818, 1200.4214978749658, 70),
-    (-863.312606397818, 1200.4214978749658, 70)
+(-2050,
+3180)
 ]
+for k in range(4):
+
+    crates.append((crates[-1][0] +300,crates[-1][1]))
+
+factor=200
+for l in range(3):
+
+
+    crates.append((950,-250-factor))
+    factor+=200
 
 health_packs = [(-663.312606397818, 1200.4214978749658, 70, 25),
                 (-1360.821003117057, 568.3919648628456, 70, 25),
-                (-863.312606397818, 1200.4214978749658, 70, 25)]
+                (-863.312606397818, 1200.4214978749658, 70, 25),(-2050,
+3180,70,25),(-1750,
+3180,70,25),(-1150,
+3180,70,25),((950,-450))]
 
 keys = [(-1360, 768.3919648628456, 70)]
 
 enemy_respawn_timer = 0
 ENEMY_RESPAWN_DELAY = 60  # Frames between spawning enemies (about 2 seconds at 60fps)
 MAX_ENEMIES = 6
-
+previous_location=[]
 left_mouse_pressed = False
 fire_cooldown = 0
 FIRE_RATE = 1
-
+previous_location=[]
 scaling_factor = 1
 gun_rotation = 0
 game_over = True
@@ -82,13 +98,18 @@ BULLET_SIZE = 7
 BULLET_LIFE = 25
 bullets = []
 def is_colliding_with_objects(x,y):
+     if player_pos[1]>=3400 or player_pos[1]<=-3400 or  player_pos[0]<=-3400 or  player_pos[0]>=3400:
+         print("collision")
+         return True
+       
+     
      for i in crates:
          if abs(x - i[0]+10 )<50 and abs(y - i[1]+10)<50:
              print("collison")
              return True
      for room in rooms:
         room_x, room_y, room_w, room_d = room
-        door_width = 100
+        door_width = 200
         door_start_x = room_x + room_w - door_width
         door_end_x = room_x + room_w
         wall_thickness = 20
@@ -159,7 +180,8 @@ def check_enemy_respawn():
             spawn_single_enemy()
             enemy_respawn_timer = ENEMY_RESPAWN_DELAY
 
-
+print(crates[9])
+print(len(crates))
 def draw_chest(x, y, z=0, length=70, width=50, height=40, top_height=20):
 
     glColor3f(0.545, 0.271, 0.075)
@@ -531,25 +553,29 @@ def update_bullets():
                     # Damage nearby enemies from explosion
                     for j in range(len(enemies) - 1, -1, -1):
                         ex2, ey2 = enemies[j][0], enemies[j][1]
-                        if math.hypot(ex2 - ex, ey2 - ey) < 300:
+                        if math.hypot(ex2 - ex, ey2 - ey) < 600:
                             enemies.pop(j)
                             score += 2
                     break
 
-            p=0
-            while p < len(crates):
-                crate_pos = crates[p]
+    
+            for p in range(len(crates) - 1, -1, -1):
+               
+
+                crate_pos=crates[p]
                 crate_x = crate_pos[0]
                 crate_y = crate_pos[1]
                 if math.hypot(x - crate_x, y - crate_y) < 50:
-                    cx = 5000
-                    cy = 5000
-                    crates[p]=(cx,cy)
+                    crates.pop(p)
+                    crates.append((100000,100000))
+                
+
+
                     hit_enemy = True
                     print("crate hit!",crates[p])
                 
                 
-                p = p + 1
+  
 
             # Add bullet to keep_list if it hasn't hit anything and still has life
             if not hit_enemy and life > 0:
@@ -785,15 +811,16 @@ def draw_walls():
     room_depth = 900
 
     # Room 1 (Top-left)
-    draw_room(-1500, 400, 900, 900, 250, door_width=100, door_height=150)
+    draw_room(-1500, 400, 900, 900, 250, door_width=200, door_height=150)
 
     # Room 2 (Center)
-    draw_room(-1500, -1100, 900, 900, 250, door_width=100, door_height=150)
+    draw_room(-1500, -1100, 900, 900, 250, door_width=200, door_height=150)
 
     # Room 3 (Bottom-right)
-    draw_room(800, -1100, 900, 900, 250, door_width=100, door_height=150)
+    draw_room(800, -1100, 900, 900, 250, door_width=200, door_height=150)
 
-    draw_room(-1800, 2500, 1500, 1500, 250, door_width=100, door_height=150)
+    draw_room(-2200, 1800, 1500, 1500, 250, door_width=200, door_height=150)
+ 
 
     # === Create Open Doors on the Rooms ===
     # Room 1 (Open door on the front wall)
@@ -1268,6 +1295,8 @@ def process_movement():
     # Calculate movement direction based on key combinations
     move_angle = None
     if key_states[b'w'] and not key_states[b's']:
+        print(player_pos[0])
+        print(player_pos[1])
 
         if key_states[b'a'] and not key_states[b'd']:
             # Forward-left (diagonal)
@@ -1277,7 +1306,7 @@ def process_movement():
             move_angle = forward_angle - 45
         else:
             # Forward
-           
+
             move_angle = forward_angle
     elif key_states[b's'] and not key_states[b'w']:
         if key_states[b'a'] and not key_states[b'd']:
@@ -1291,31 +1320,49 @@ def process_movement():
     if move_angle is not None:
 
         if is_colliding_with_objects(player_pos[0],player_pos[1]):
-            rad = math.radians(move_angle)
-            dx = math.cos(rad) * move_speed
-            dy = math.sin(rad) * move_speed
+            player_pos[0]=previous_location[-5][0]
+            player_pos[1]=previous_location[-5][1]
+            for i in range(5):
+                previous_location.pop()
+            
+         
+
         
-        # Check for collision in the direction of movement and block
-            if abs(player_pos[0] + dx) < player_pos[0] and abs(player_pos[1] + dy) < player_pos[1]:
-                player_pos[0] += 50  # Move player back by 50 on X-axis
-                player_pos[1] += 50  # Move player back by 50 on Y-axis
-            elif abs(player_pos[0] + dx) > player_pos[0] and abs(player_pos[1] + dy) > player_pos[1]:
-                player_pos[0] -= 50  # Move player back by 50 on X-axis
-                player_pos[1] -= 50  # Move player back by 50 on Y-axis
-            elif abs(player_pos[0] + dx) > player_pos[0] and abs(player_pos[1] + dy) < player_pos[1]:
-                player_pos[0] -= 50  # Move player back by 50 on X-axis
-                player_pos[1] += 50  # Move player back by 50 on Y-axis
-            elif abs(player_pos[0] + dx) < player_pos[0] and abs(player_pos[1] + dy) > player_pos[1]:
-                player_pos[0] += 50  # Move player back by 50 on X-axis
-                player_pos[1] -= 50  # Move player back by 50 on Y-axis
+        # # Check for collision in the direction of movement and block
+        #     if abs(player_pos[0] + 1) < abs(player_pos[0]):
+        #         player_pos[0]+=50
+
+        #     elif  abs(player_pos[1] + 1) < player_pos[1]:
+        #         player_pos[1]+=50
+            
+        #     elif abs(player_pos[0] + 1) > player_pos[0]:
+        #         player_pos[0]-=50
+
+            
+        #     elif abs(player_pos[1] + 1) > player_pos[1]:
+
+        #         player_pos+=50
+            
+        #     elif  abs(player_pos[1] + -1) > player_pos[1]:
+        #         player_pos[1]+=50
+            
+        #     elif abs(player_pos[0] + 1) > player_pos[0]:
+
+        #         player_pos[0] +=50
+
 
         else:
+
             rad = math.radians(move_angle)
             dx = math.cos(rad) * move_speed
             dy = math.sin(rad) * move_speed
+
             player_pos[0] += dx
             player_pos[1] += dy
+            if (player_pos[0],player_pos[1]) not in previous_location:
+                previous_location.append((player_pos[0],player_pos[1] ))
             orange_screen_flag = False
+      
 
 
 def specialKeyListener(key, x, y):
@@ -1384,7 +1431,7 @@ def showScreen():
     for g in range(len(health_packs) - 1):
 
         if abs(player_pos[0] - health_packs[g][0]) < 15 and abs(player_pos[1] - health_packs[g][1]) < 15:
-            player_health += 2
+            player_health += 25
             del health_packs[g]
 
         else:
@@ -1412,7 +1459,7 @@ def showScreen():
     for i in range(10):
         draw_tree(r_x, r_y, 0)
         r_x += 350
-    for i in range(17):
+    for i in range(10):
         draw_tree(val_x, g_y, 0)
         g_y += 300
 
